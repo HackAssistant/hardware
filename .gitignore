@@ -1,0 +1,6 @@
+.idea
+*.pyc
+__pycache__
+django_ha_hardware.egg-info
+dist/
+
