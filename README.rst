@@ -1,11 +1,13 @@
-<br>
-<p align="center">
-  <img alt="HackAssistant" src="https://avatars2.githubusercontent.com/u/33712329?s=200&v=4" width="200"/>
-</p>
-<br>
+.. raw:: html
+ 
+    <p align="center">
+    <img alt="HackAssistant" src="https://avatars2.githubusercontent.com/u/33712329?s=200&v=4" width="200"/>
+    </p>
+    
 
 
-[![Build Status](https://travis-ci.com/HackAssistant/hardware.svg?branch=master)](https://travis-ci.com/HackAssistant/hardware)
+.. image:: https://travis-ci.com/HackAssistant/hardware.svg?branch=master
+    :target: https://travis-ci.com/HackAssistant/hardware
 
 HA - Hardware is an extension to HackAssistant that enables the backend to handle a Hardware Lab for your hackathon.
 
