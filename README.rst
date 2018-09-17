@@ -17,22 +17,26 @@ Features:
 Quick Start
 -----------
 
-1. Install the plugin::
+1. Download package::
+
+	wget https://github.com/HackAssistant/hardware/releases/download/v0.1/django-ha-hardware-0.1.tar.gz
+
+2. Install package::
 
 	pip install django-ha-hadrware-0.1.tar.gz
-	
-2. Enable it by changing the corresponding variable in `hackathon_variables.py`::
+
+3. Enable it by changing the corresponding variable in `hackathon_variables.py`::
 
 	HARDWARE_ENABLED = True
-	
-3. Migrate the database to create the new models::
+
+4. Migrate the database to create the new models::
 
 	python manage.py migrate
-	
+
 That's it! Now you can add items in the 'hardware' section of the admin.
 
 Build
--------
+-----
 
 To build the plugin, just call::
 
