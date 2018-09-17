@@ -30,3 +30,10 @@ Quick Start
 	python manage.py migrate
 	
 That's it! Now you can add items in the 'hardware' section of the admin.
+
+Build
+-------
+
+To build the plugin, just call::
+
+	python setup.py sdist
