@@ -1,8 +1,9 @@
-from django.db import models
-from user.models import User
-from app import hackathon_variables
-from django.utils import timezone
 from datetime import timedelta
+
+from app import hackathon_variables
+from django.db import models
+from django.utils import timezone
+from user.models import User
 
 
 class ItemType(models.Model):
@@ -66,7 +67,7 @@ class Item(models.Model):
 
 class LendingQuerySet(models.QuerySet):
     def get_active(self):
-            return self.filter(return_time__isnull=True)
+        return self.filter(return_time__isnull=True)
 
     def get_returned(self):
         return self.filter(return_time__isnull=False)
@@ -91,9 +92,9 @@ class Lending(models.Model):
     # If null: item has not been returned yet
     return_time = models.DateTimeField(null=True, blank=True)
 
-    #Lending handled by
+    # Lending handled by
     lending_by = models.ForeignKey(User, related_name='hardware_admin_lending')
-    #Return handled by (null until returned)
+    # Return handled by (null until returned)
     return_by = models.ForeignKey(User, related_name='hardware_admin_return', null=True, blank=True)
 
     def get_picked_up_time_ago(self):
@@ -108,10 +109,11 @@ class Lending(models.Model):
     def __str__(self):
         return '{} ({})'.format(self.item.item_type.name, self.user)
 
+
 class RequestQuerySet(models.QuerySet):
     def get_active(self):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
-        threshold = timezone.now()-delta
+        threshold = timezone.now() - delta
         return self.filter(lending__isnull=True, request_time__gte=threshold)
 
     def get_lent(self):
@@ -119,17 +121,17 @@ class RequestQuerySet(models.QuerySet):
 
     def get_expired(self):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
-        threshold = timezone.now()-delta
+        threshold = timezone.now() - delta
         return self.filter(lending__isnull=True, request_time__lt=threshold)
 
     def get_active_by_user(self, user):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
-        threshold = timezone.now()-delta
+        threshold = timezone.now() - delta
         return self.filter(lending__isnull=True, request_time__gte=threshold, user=user)
 
     def get_active_by_item_type(self, item_type):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
-        threshold = timezone.now()-delta
+        threshold = timezone.now() - delta
         return self.filter(lending__isnull=True, request_time__gte=threshold, item_type=item_type)
 
 

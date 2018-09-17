@@ -1,16 +1,17 @@
-from django.urls import reverse
-from django.views.generic import TemplateView
-from django_filters.views import FilterView
-from django.template.loader import render_to_string
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse, HttpResponse
-from django.utils import timezone
-from django_tables2 import SingleTableMixin
-from django.core import serializers
-from user.mixins import IsHardwareAdminMixin
 from app import hackathon_variables
 from app.mixins import TabsViewMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core import serializers
+from django.http import JsonResponse, HttpResponse
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.views.generic import TemplateView
+from django_filters.views import FilterView
+from django_tables2 import SingleTableMixin
+from user.mixins import IsHardwareAdminMixin
 from user.models import User
+
 from hardware.models import Item, ItemType, Lending, Request
 from hardware.tables import LendingTable, LendingFilter, RequestTable, RequestFilter
 
@@ -29,11 +30,11 @@ def hardware_tabs(user):
         ]
 
 
-class HardwareAdminRequestsView(TabsViewMixin, IsHardwareAdminMixin, 
-    SingleTableMixin, FilterView):
+class HardwareAdminRequestsView(TabsViewMixin, IsHardwareAdminMixin,
+                                SingleTableMixin, FilterView):
     template_name = 'hardware_requests.html'
     table_class = RequestTable
-    table_pagination = {'per_page':50}
+    table_pagination = {'per_page': 50}
     filterset_class = RequestFilter
 
     def get_current_tabs(self):
@@ -42,10 +43,11 @@ class HardwareAdminRequestsView(TabsViewMixin, IsHardwareAdminMixin,
     def get_queryset(self):
         return Request.objects.all()
 
+
 class HardwareLendingsView(TabsViewMixin, SingleTableMixin, FilterView):
     template_name = 'hardware_lendings.html'
     table_class = LendingTable
-    table_pagination = {'per_page':50}
+    table_pagination = {'per_page': 50}
     filterset_class = LendingFilter
 
     def get_current_tabs(self):
@@ -99,7 +101,6 @@ class HardwareListView(LoginRequiredMixin, TabsViewMixin, TemplateView):
             'available_items': available_items
         })
 
-
     def post(self, request):
         if request.is_ajax:
             if 'req_item' in request.POST:
@@ -131,7 +132,7 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
         """
         target_user = User.objects.filter(email=request.POST['email'])
         if not target_user.exists():
-            #In this case we don't want to return to the initial page
+            # In this case we don't want to return to the initial page
             return JsonResponse({
                 'msg': "ERROR: The user doesn't exist"
             })
@@ -227,7 +228,7 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
         item = Item.objects.get(id=request.POST['item_id'])
         target_user = User.objects.filter(email=request.POST['email'])
         if not target_user.exists():
-            #In this case we don't want to return to the initial page
+            # In this case we don't want to return to the initial page
             return JsonResponse({
                 'msg': "ERROR: The user doesn't exist"
             })
