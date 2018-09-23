@@ -44,11 +44,13 @@ class HardwareAdminRequestsView(TabsViewMixin, IsHardwareAdminMixin,
         return Request.objects.all()
 
 
-class HardwareLendingsView(TabsViewMixin, SingleTableMixin, FilterView):
+class HardwareLendingsView(LoginRequiredMixin, TabsViewMixin, SingleTableMixin, 
+    FilterView):
     template_name = 'hardware_lendings.html'
     table_class = LendingTable
     table_pagination = {'per_page': 50}
     filterset_class = LendingFilter
+
 
     def get_current_tabs(self):
         return hardware_tabs(self.request.user)
