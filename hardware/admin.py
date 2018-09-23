@@ -25,10 +25,10 @@ class RequestAdmin(admin.ModelAdmin):
     remaining_time.short_description = 'Remaining time/Status'
     remaining_time.admin_order_field = 'request_time'
 
-    list_display = ['id', 'item_type', 'user', 'lending', 'request_time', 'remaining_time']
+    list_display = ['id', 'item_type', 'user', 'borrowing', 'request_time', 'remaining_time']
 
 
-class LendingAdmin(admin.ModelAdmin):
+class BorrowingAdmin(admin.ModelAdmin):
     def picked_up_time_ago(self, obj):
         return '{} ({} ago)'.format(
             obj.picked_up_time, obj.get_picked_up_time_ago())
@@ -50,4 +50,4 @@ class LendingAdmin(admin.ModelAdmin):
 admin.site.register(models.ItemType, TypeAdmin)
 admin.site.register(models.Item, ItemAdmin)
 admin.site.register(models.Request, RequestAdmin)
-admin.site.register(models.Lending, LendingAdmin)
+admin.site.register(models.Borrowing, BorrowingAdmin)

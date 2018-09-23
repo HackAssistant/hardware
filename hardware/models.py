@@ -17,23 +17,23 @@ class ItemType(models.Model):
     # what is it used for? which items are contained in the package?
     description = models.TextField()
 
-    def get_lendable_items(self):
-        """ Get items not lent already """
+    def get_borrowable_items(self):
+        """ Get items not borrowed already """
         availables = Item.objects.filter(item_type=self, available=True)
-        lendings = Lending.objects.filter(item__item_type=self, return_time__isnull=True)
-        return availables.exclude(id__in=[x.item.id for x in lendings])
+        borrowings = Borrowing.objects.filter(item__item_type=self, return_time__isnull=True)
+        return availables.exclude(id__in=[x.item.id for x in borrowings])
 
     def get_available_count(self):
         ava_count = Item.objects.filter(item_type=self, available=True).count()
         req_count = self.get_requested_count()
-        lent_count = self.get_lent_count()
-        return ava_count - req_count - lent_count
+        borrowed_count = self.get_borrowed_count()
+        return ava_count - req_count - borrowed_count
 
     def get_requested_count(self):
         return Request.objects.get_active_by_item_type(self).count()
 
-    def get_lent_count(self):
-        return Lending.objects.get_active_by_item_type(self).count()
+    def get_borrowed_count(self):
+        return Borrowing.objects.get_active_by_item_type(self).count()
 
     def get_unavailable_count(self):
         return Item.objects.filter(item_type=self, available=False).count()
@@ -58,14 +58,14 @@ class Item(models.Model):
     # Any other relevant information about this item
     comments = models.TextField(blank=True, null=True)
 
-    def can_be_lent(self):
-        return Lending.objects.filter(return_time__isnull=True, item=self).count() == 0
+    def can_be_borrowed(self):
+        return Borrowing.objects.filter(return_time__isnull=True, item=self).count() == 0
 
     def __str__(self):
         return '{} ({})'.format(self.label, self.item_type.name)
 
 
-class LendingQuerySet(models.QuerySet):
+class BorrowingQuerySet(models.QuerySet):
     def get_active(self):
         return self.filter(return_time__isnull=True)
 
@@ -79,11 +79,11 @@ class LendingQuerySet(models.QuerySet):
         return self.filter(return_time__isnull=True, user=user)
 
 
-class Lending(models.Model):
+class Borrowing(models.Model):
     """
-    The 'item' has been lent to the 'user'
+    The 'item' has been borrowed to the 'user'
     """
-    objects = LendingQuerySet.as_manager()
+    objects = BorrowingQuerySet.as_manager()
 
     user = models.ForeignKey(User)
     item = models.ForeignKey(Item)
@@ -92,8 +92,8 @@ class Lending(models.Model):
     # If null: item has not been returned yet
     return_time = models.DateTimeField(null=True, blank=True)
 
-    # Lending handled by
-    lending_by = models.ForeignKey(User, related_name='hardware_admin_lending')
+    # Borrowing handled by
+    borrowing_by = models.ForeignKey(User, related_name='hardware_admin_borrowing')
     # Return handled by (null until returned)
     return_by = models.ForeignKey(User, related_name='hardware_admin_return', null=True, blank=True)
 
@@ -114,25 +114,25 @@ class RequestQuerySet(models.QuerySet):
     def get_active(self):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
         threshold = timezone.now() - delta
-        return self.filter(lending__isnull=True, request_time__gte=threshold)
+        return self.filter(borrowing__isnull=True, request_time__gte=threshold)
 
-    def get_lent(self):
-        return self.filter(lending__isnull=False)
+    def get_borrowed(self):
+        return self.filter(borrowing__isnull=False)
 
     def get_expired(self):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
         threshold = timezone.now() - delta
-        return self.filter(lending__isnull=True, request_time__lt=threshold)
+        return self.filter(borrowing__isnull=True, request_time__lt=threshold)
 
     def get_active_by_user(self, user):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
         threshold = timezone.now() - delta
-        return self.filter(lending__isnull=True, request_time__gte=threshold, user=user)
+        return self.filter(borrowing__isnull=True, request_time__gte=threshold, user=user)
 
     def get_active_by_item_type(self, item_type):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
         threshold = timezone.now() - delta
-        return self.filter(lending__isnull=True, request_time__gte=threshold, item_type=item_type)
+        return self.filter(borrowing__isnull=True, request_time__gte=threshold, item_type=item_type)
 
 
 class Request(models.Model):
@@ -147,21 +147,21 @@ class Request(models.Model):
     item_type = models.ForeignKey(ItemType)
     # Hacker that made the request
     user = models.ForeignKey(User)
-    # Lending derived from this request
-    lending = models.ForeignKey(Lending, null=True, blank=True)
+    # Borrowing derived from this request
+    borrowing = models.ForeignKey(Borrowing, null=True, blank=True)
     # Instant of creation
     request_time = models.DateTimeField(auto_now_add=True)
 
     def is_active(self):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
         remaining = delta - (timezone.now() - self.request_time)
-        return not self.lending and remaining.total_seconds() > 0
+        return not self.borrowing and remaining.total_seconds() > 0
 
     def get_remaining_time(self):
         delta = timedelta(minutes=hackathon_variables.HARDWARE_REQUEST_TIME)
         remaining = delta - (timezone.now() - self.request_time)
-        if self.lending:
-            return "Lent"
+        if self.borrowing:
+            return "Borrowed"
         elif remaining.total_seconds() < 0:
             return "Expired"
         else:
