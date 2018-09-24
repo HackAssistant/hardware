@@ -31,7 +31,7 @@ Quick Start
 
 2. Install package::
 
-	pip install django-ha-hadrware-0.1.tar.gz
+	pip install django-ha-hardware-0.1.tar.gz
 
 3. Enable it by changing the corresponding variable in `hackathon_variables.py`::
 
