@@ -44,8 +44,8 @@ class HardwareAdminRequestsView(TabsViewMixin, IsHardwareAdminMixin,
         return Request.objects.all()
 
 
-class HardwareLendingsView(LoginRequiredMixin, TabsViewMixin, SingleTableMixin, 
-    FilterView):
+class HardwareLendingsView(LoginRequiredMixin, TabsViewMixin, SingleTableMixin,
+                           FilterView):
     template_name = 'hardware_lendings.html'
     table_class = LendingTable
     table_pagination = {'per_page': 50}
@@ -58,7 +58,6 @@ class HardwareLendingsView(LoginRequiredMixin, TabsViewMixin, SingleTableMixin,
             context['table'].exclude = ('id', 'user', 'lending_by', 'return_by')
 
         return context
-
 
     def get_current_tabs(self):
         return hardware_tabs(self.request.user)
