@@ -50,6 +50,14 @@ class HardwareBorrowingsView(TabsViewMixin, SingleTableMixin, FilterView):
     table_pagination = {'per_page': 50}
     filterset_class = BorrowingFilter
 
+    def get_context_data(self, **kwargs):
+        context = super(HardwareBorrowingsView, self).get_context_data(**kwargs)
+        if not self.request.user.is_hardware_admin:
+            context['filter'] = False
+            context['table'].exclude = ('id', 'user', 'lending_by', 'return_by')
+
+        return context
+
     def get_current_tabs(self):
         return hardware_tabs(self.request.user)
 
