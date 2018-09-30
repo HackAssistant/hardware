@@ -88,15 +88,15 @@ let hw_admin = ((hw)=>{
                 'request_id': ev.currentTarget.dataset.requestId
             }, obj.processResponse)
         })
-        $("#hw-lendings-list li").on("click", (ev)=>{
+        $("#hw-borrowings-list li").on("click", (ev)=>{
             hw.ajax_req({
                 'return_item': true,
-                'lending_id': ev.currentTarget.dataset.lendingId
+                'borrowing_id': ev.currentTarget.dataset.borrowingId
             }, obj.processResponse)
         })
         $("#hw-available-items-list li").on("click", (ev)=>{
             hw.ajax_req({
-                'make_lending': true,
+                'make_borrowing': true,
                 'item_id': ev.currentTarget.dataset.itemId,
                 'request_id': ev.currentTarget.parentNode.dataset.requestId
             }, obj.processResponse)

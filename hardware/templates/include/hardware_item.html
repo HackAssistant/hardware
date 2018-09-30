@@ -5,7 +5,7 @@
     <span>/</span> 
     <span class='hw-request-color'>{{ item_type.get_requested_count }}</span>
     <span>/</span>
-    <span class='hw-lending-color'>{{ item_type.get_lent_count }}</span>
+    <span class='hw-borrowing-color'>{{ item_type.get_borrowed_count }}</span>
 </div>
 {% else %}
 <div class='hw-bg'>
@@ -20,7 +20,7 @@
         <div class="hw-stats">
             <div><div class='num hw-available-color'>{{ item_type.get_available_count }}</div> <div>Available</div></div>
             <div><div class='num hw-request-color'>{{ item_type.get_requested_count }}</div> <div>Requested</div></div>
-            <div><div class='num hw-lending-color'>{{ item_type.get_lent_count }}</div> <div>Lent</div></div>
+            <div><div class='num hw-borrowing-color'>{{ item_type.get_borrowed_count }}</div> <div>Borrowed</div></div>
         </div>
         {% if item_type.id in requests %}
             <button class='hw-req-btn' data-item-id='{{ item_type.id }}' disabled data-target-time='{{requests|get_item:item_type.id}}'></button>

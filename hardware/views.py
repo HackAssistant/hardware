@@ -12,8 +12,8 @@ from django_tables2 import SingleTableMixin
 from user.mixins import IsHardwareAdminMixin
 from user.models import User
 
-from hardware.models import Item, ItemType, Lending, Request
-from hardware.tables import LendingTable, LendingFilter, RequestTable, RequestFilter
+from hardware.models import Item, ItemType, Borrowing, Request
+from hardware.tables import BorrowingTable, BorrowingFilter, RequestTable, RequestFilter
 
 
 def hardware_tabs(user):
@@ -21,12 +21,12 @@ def hardware_tabs(user):
         return [
             ('Hardware Admin', reverse('hw_admin'), False),
             ('Requests', reverse('hw_requests'), False),
-            ('Lendings', reverse('hw_lendings'), False)
+            ('Borrowings', reverse('hw_borrowings'), False)
         ]
     else:
         return [
             ('Hardware List', reverse('hw_list'), False),
-            ('Lendings', reverse('hw_lendings'), False)
+            ('Borrowings', reverse('hw_borrowings'), False)
         ]
 
 
@@ -44,15 +44,14 @@ class HardwareAdminRequestsView(TabsViewMixin, IsHardwareAdminMixin,
         return Request.objects.all()
 
 
-class HardwareLendingsView(LoginRequiredMixin, TabsViewMixin, SingleTableMixin,
-                           FilterView):
-    template_name = 'hardware_lendings.html'
-    table_class = LendingTable
+class HardwareBorrowingsView(TabsViewMixin, SingleTableMixin, FilterView):
+    template_name = 'hardware_borrowings.html'
+    table_class = BorrowingTable
     table_pagination = {'per_page': 50}
-    filterset_class = LendingFilter
+    filterset_class = BorrowingFilter
 
     def get_context_data(self, **kwargs):
-        context = super(HardwareLendingsView, self).get_context_data(**kwargs)
+        context = super(HardwareBorrowingsView, self).get_context_data(**kwargs)
         if not self.request.user.is_hardware_admin:
             context['filter'] = False
             context['table'].exclude = ('id', 'user', 'lending_by', 'return_by')
@@ -64,9 +63,9 @@ class HardwareLendingsView(LoginRequiredMixin, TabsViewMixin, SingleTableMixin,
 
     def get_queryset(self):
         if self.request.user.is_hardware_admin:
-            return Lending.objects.all()
+            return Borrowing.objects.all()
         else:
-            return Lending.objects.get_queryset().filter(user=self.request.user)
+            return Borrowing.objects.get_queryset().filter(user=self.request.user)
 
 
 class HardwareListView(LoginRequiredMixin, TabsViewMixin, TemplateView):
@@ -136,7 +135,7 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
 
     def get_lists(self, request):
         """
-        When a user has a request or a lending we get the lists
+        When a user has a request or a borrowing we get the lists
         to proceed
         """
         target_user = User.objects.filter(email=request.POST['email'])
@@ -147,10 +146,10 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
             })
 
         requests = Request.objects.get_active_by_user(target_user.first())
-        lendings = Lending.objects.get_active_by_user(target_user.first())
+        borrowings = Borrowing.objects.get_active_by_user(target_user.first())
         html = render_to_string("include/hardware_admin_user.html", {
             'requests': requests,
-            'lendings': lendings
+            'borrowings': borrowings
         })
         return JsonResponse({
             'content': html
@@ -158,15 +157,15 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
 
     def select_request(self, request):
         """
-        We selected a request to process a lending. Then we show a list
+        We selected a request to process a borrowing. Then we show a list
         with the available items of that type
         """
         request_obj = Request.objects.get(id=request.POST['request_id'])
         if not request_obj.is_active():
             return self.init_and_toast("ERROR: The request has expired")
 
-        available_items = request_obj.item_type.get_lendable_items()
-        html = render_to_string("include/hardware_admin_lending.html", {
+        available_items = request_obj.item_type.get_borrowable_items()
+        html = render_to_string("include/hardware_admin_borrowing.html", {
             'items': available_items,
             'request_id': request.POST['request_id']
         })
@@ -174,32 +173,32 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
 
     def return_item(self, request):
         """
-        We selected a lending to end it
+        We selected a borrowing to end it
         """
-        lending = Lending.objects.get(id=request.POST['lending_id'])
-        if not lending.is_active():
-            return self.init_and_toast("ERROR: The item was not lent")
+        borrowing = Borrowing.objects.get(id=request.POST['borrowing_id'])
+        if not borrowing.is_active():
+            return self.init_and_toast("ERROR: The item was not borrowed")
 
-        lending.return_time = timezone.now()
-        lending.return_by = request.user
-        lending.save()
+        borrowing.return_time = timezone.now()
+        borrowing.return_by = request.user
+        borrowing.save()
         return self.init_and_toast("The item has been returned succesfully")
 
-    def make_lending(self, request):
+    def make_borrowing(self, request):
         """
-        Once we choose the item, we can now make the lending
+        Once we choose the item, we can now make the borrowing
         and finish the process
         """
         item = Item.objects.get(id=request.POST['item_id'])
-        if not item.can_be_lent():
+        if not item.can_be_borrowed():
             return self.init_and_toast("ERROR: The item is not available")
 
         request_obj = Request.objects.get(id=request.POST['request_id'])
-        lending = Lending(user=request_obj.user, item=item, lending_by=request.user)
-        lending.save()
-        request_obj.lending = lending
+        borrowing = Borrowing(user=request_obj.user, item=item, borrowing_by=request.user)
+        borrowing.save()
+        request_obj.borrowing = borrowing
         request_obj.save()
-        return self.init_and_toast("The item has been lent succesfully")
+        return self.init_and_toast("The item has been borrowed succesfully")
 
     def select_type_noreq(self, request):
         """
@@ -209,8 +208,8 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
         if item_type.get_available_count() <= 0:
             return self.init_and_toast("ERROR: There are no items available")
 
-        available_items = item_type.get_lendable_items()
-        html = render_to_string("include/hardware_admin_lending.html", {
+        available_items = item_type.get_borrowable_items()
+        html = render_to_string("include/hardware_admin_borrowing.html", {
             'items': available_items,
         })
         return JsonResponse({'content': html})
@@ -220,7 +219,7 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
         We selected an item without request. We still need a user
         """
         item = Item.objects.get(id=request.POST['item_id'])
-        if not item.can_be_lent():
+        if not item.can_be_borrowed():
             return self.init_and_toast("ERROR: The item is not available")
 
         html = render_to_string("include/hardware_user_email.html", {
@@ -232,7 +231,7 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
 
     def get_user_noreq(self, request):
         """
-        We can make the lending without request now
+        We can make the borrowing without request now
         """
         item = Item.objects.get(id=request.POST['item_id'])
         target_user = User.objects.filter(email=request.POST['email'])
@@ -241,12 +240,12 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
             return JsonResponse({
                 'msg': "ERROR: The user doesn't exist"
             })
-        if not item.can_be_lent():
+        if not item.can_be_borrowed():
             return self.init_and_toast("ERROR: The item is not available")
 
-        lending = Lending(user=target_user.first(), item=item, lending_by=request.user)
-        lending.save()
-        return self.init_and_toast("The item has been lent succesfully")
+        borrowing = Borrowing(user=target_user.first(), item=item, borrowing_by=request.user)
+        borrowing.save()
+        return self.init_and_toast("The item has been borrowed succesfully")
 
     def identify_hacker(self, request):
         """
@@ -265,8 +264,8 @@ class HardwareAdminView(IsHardwareAdminMixin, TabsViewMixin, TemplateView):
                 return self.select_request(request)
             if 'return_item' in request.POST:
                 return self.return_item(request)
-            if 'make_lending' in request.POST:
-                return self.make_lending(request)
+            if 'make_borrowing' in request.POST:
+                return self.make_borrowing(request)
             if 'select_type_noreq' in request.POST:
                 return self.select_type_noreq(request)
             if 'select_item_noreq' in request.POST:

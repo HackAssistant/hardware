@@ -30,7 +30,7 @@
 .hw-request-color{
     color: #ffae6b;
 }
-.hw-lending-color{
+.hw-borrowing-color{
     color: #ff6b6b;
 }
 
@@ -294,7 +294,7 @@
     color: #ff6b6b;
 }
 
-#hw-admin-lending h3{
+#hw-admin-borrowing h3{
     color:#aaa;
 }
 
