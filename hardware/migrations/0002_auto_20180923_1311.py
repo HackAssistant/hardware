@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField( 'Lending', 'lending_by', 'borrowing_by')
-        migrations.RenameModel( 'Lending', 'Borrowing'),
+        migrations.RenameField( 'Lending', 'lending_by', 'borrowing_by'),
+        migrations.RenameModel( 'Lending', 'Borrowing')
     ]
