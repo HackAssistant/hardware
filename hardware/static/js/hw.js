@@ -48,6 +48,7 @@ let hw = (()=>{
         let msg = msg_in || ""
         let title = title_in || "HackathonAssistant"
         let closeIn = time || 10000
+        var icon = icon || window.location.origin + "/static/favicon.png"
         let notification = new Notification(title, {
             body: msg,
             icon: icon
