@@ -26,7 +26,7 @@ let hw_list = ((hw)=>{
         element.innerHTML=count
     }
     function notifyAvailableItem(item){
-        hw.notify("A "+item.name+" has become available! Click the notification to request.", 
+        hw.notify("A "+item.name+" has become available! Click the notification to request (May not work in your browser).", 
             "HackathonAssistant", "", ()=>{
             hw.ajax_req({
                 'req_item':true, 
@@ -71,8 +71,6 @@ let hw_list = ((hw)=>{
         checkItems.push(itemId)
         if(!timer){
             timer = setInterval(()=>{
-                if(!checkItems)
-                    timer = false
                 hw.ajax_req({
                     'check_availability': true,
                     'item_ids': checkItems
@@ -80,42 +78,59 @@ let hw_list = ((hw)=>{
                     for(let item of data.available_items){
                         obj.stopPool(item.id)
                         notifyAvailableItem(item)
+                        var btn =$("[data-item-id="+item.id+"]")[0]
+                        btn.dataset.action = 'request'
+                        btn.innerHTML = "REQUEST"
+                        btn.classList.remove('active')
+                    }
+                    if(!checkItems.length)
+                    {
+                        clearInterval(timer)
+                        timer = false
                     }
                 })
             }, POOLING_TIME)
         }
     }
     obj.initListeners = ()=>{
-        $("[data-action='lmk']").on("click", (ev)=>{
-            if($(ev.target).hasClass('active')){
-                $(ev.target).removeClass('active')
-                obj.stopPool(ev.target.dataset.itemId)
-                return
+        $("[data-action]").on("click", (ev)=>{
+            if(ev.currentTarget.dataset.action === 'lmk')
+            {
+                if($(ev.target).hasClass('active'))
+                {
+                    $(ev.target).removeClass('active')
+                    obj.stopPool(ev.target.dataset.itemId)
+                    return
+                }
+                if(!hw.canNotify)
+                {
+                    hw.initNotifications((permission)=>{
+                        if(permission){
+                            hw.notify("Notifications enabled!")
+                            $(ev.target).addClass('active')
+                            obj.poolAvailability(ev.target.dataset.itemId)
+                        }
+                    })
+                } 
+                else 
+                {
+                    $(ev.target).addClass('active')
+                    obj.poolAvailability(ev.target.dataset.itemId)
+                }
             }
-            if(!hw.canNotify){
-                hw.initNotifications((permission)=>{
-                    if(permission){
-                        hw.notify("Notifications enabled!")
-                        $(ev.target).addClass('active')
-                        obj.poolAvailability(ev.target.dataset.itemId)
+            else
+            {
+                hw.ajax_req({
+                    'req_item':true, 
+                    'item_id': ev.currentTarget.dataset.itemId,
+                }, (data)=>{
+                    if(data.ok){
+                        ev.currentTarget.dataset.targetTime = "00:"+data.minutes+":00"
+                        obj.setTimer(ev.currentTarget)
                     }
-                })
-            } else {
-                $(ev.target).addClass('active')
-                obj.poolAvailability(ev.target.dataset.itemId)
+                })                
             }
 
-        })
-        $("[data-action='request']").on("click", (ev)=>{
-            hw.ajax_req({
-                'req_item':true, 
-                'item_id': ev.currentTarget.dataset.itemId,
-            }, (data)=>{
-                if(data.ok){
-                    ev.currentTarget.dataset.targetTime = "00:"+data.minutes+":00"
-                    obj.setTimer(ev.currentTarget)
-                }
-            })
         })
         $(".hw-toggle").on("click", (ev)=>{
             $(ev.currentTarget).toggleClass("open")
